@@ -1,0 +1,26 @@
+/* components/Tools.css */
+.tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.tools button {
+  margin-bottom: 5px;
+  padding: 5px 10px;
+}
+
+.move-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.move-buttons button {
+  flex: 1;
+  margin-right: 5px;
+}
+
+.move-buttons button:last-child {
+  margin-right: 0;
+}

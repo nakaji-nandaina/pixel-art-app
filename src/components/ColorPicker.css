@@ -1,0 +1,38 @@
+/* src/components/ColorPicker.css */
+
+/* カラーピッカー全体のスタイル */
+.color-picker {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* 各スライダーのスタイル */
+.color-slider, .brightness-slider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* ラベルのスタイル */
+.color-slider label, .brightness-slider label {
+  width: 50px;
+}
+
+/* スライダーのスタイル */
+.color-slider input[type='range'], .brightness-slider input[type='range'] {
+  margin: 0 10px;
+  flex: 1;
+}
+
+/* 数値入力のスタイル */
+.color-slider input[type='number'] {
+  width: 60px;
+}
+
+/* 明暗表示のスタイル */
+.brightness-slider span {
+  width: 40px;
+  text-align: right;
+}
+
+/* ボタンのスタイルを削除しました */

@@ -1,0 +1,30 @@
+/* src/components/Canvas.css */
+
+/* キャンバス全体のスタイル */
+.canvas {
+  display: grid;
+  grid-template-columns: repeat(40, 17px); /* セルサイズに合わせて変更 */
+  grid-template-rows: repeat(40, 17px);    /* セルサイズに合わせて変更 */
+  border: 1px solid #000;
+  cursor: crosshair;
+  user-select: none; /* テキスト選択を防止 */
+  position: relative; /* オーバーレイ表示のためにrelativeを設定 */
+}
+
+/* 各セルのスタイル */
+.cell {
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border: 1px solid #ddd; /* outlineからborderに変更 */
+}
+
+/* 選択範囲内のセルをハイライト */
+
+
+/* 移動中の選択範囲のセルをハイライト */
+.moved-cell {
+  position: absolute;
+  pointer-events: none;
+  opacity: 1;
+}

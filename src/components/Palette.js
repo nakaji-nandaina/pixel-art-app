@@ -1,5 +1,5 @@
 // src/components/Palette.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './Palette.css';
 
 /**

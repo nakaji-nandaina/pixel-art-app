@@ -1,70 +1,41 @@
-# Getting Started with Create React App
+# ドット絵を作るアプリ(初心者向け)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+取り合えず基本機能だけ実装しました。ドット絵を簡単に作成・編集できるシンプルなアプリケーションです。
+https://dot-a-d5f6c.web.app/
 
-## Available Scripts
+[Live Demo](https://dot-a-d5f6c.web.app/)
 
-In the project directory, you can run:
+## 目次
+- [現在の機能](#現在の機能)
+- [これから実装することリスト](#これから実装することリスト)
+- [使用技術](#使用技術)
 
-### `npm start`
+## 現在の機能
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **グリッドベースのキャンバス**: ピクセル単位でドット絵を描くためのグリッド。
+- **カラー選択ツール**: 豊富なカラーパレットから色を選択可能。
+- **描画ツール**: ペン、バケツ塗りなどの基本的なツール。
+- **保存**: 作成したドット絵をローカルに保存できます。
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## これから実装することリスト
 
-### `npm test`
+1. **データ管理**
+   - アカウントを作成し、クラウド上で作品を保存・管理。
+2. **テンプレートギャラリー**
+   - 既存のドット絵テンプレートを提供し、ユーザーがカスタマイズ可能にする。
+3. **ドット絵の読み込み**
+   - 既存のドット絵を読み込み編集できるようにする。画像サイズが異なる場合は最近傍法か線形補間で補正する。（ここはユーザが選択可能になるようにしたい）
+4. **エクスポートオプションの拡充**
+   - PNGやJPGなど、異なるフォーマットでのエクスポート機能。1ピクセルを10×10にするなどサイズ変更もできるようにする。
+5. **リアルタイムコラボレーション**
+   - 複数のユーザーが同時に一つのドット絵を編集できる機能。
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 使用技術
 
-### `npm run build`
+- **フロントエンド**
+  - [React](https://reactjs.org/)
+- **バックエンド**
+  - [Firebase](https://firebase.google.com/)（ホスティング、データベース）
+- **CI/CD**
+  - [GitHub Actions](https://github.com/features/actions)（自動デプロイ）
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

@@ -2,7 +2,7 @@
 
 取り合えず基本機能だけ実装しました。ドット絵を簡単に作成・編集できるシンプルなアプリケーションです。
 
-[Demo]([https://dot-a-d5f6c.web.app/](https://dot-a-d5f6c.firebaseapp.com/))
+[Demo](https://dot-a-d5f6c.firebaseapp.com/)
 
 ## 目次
 - [現在の機能](#現在の機能)

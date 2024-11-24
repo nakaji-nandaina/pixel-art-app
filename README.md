@@ -1,9 +1,8 @@
 # ドット絵を作るアプリ(初心者向け)
 
 取り合えず基本機能だけ実装しました。ドット絵を簡単に作成・編集できるシンプルなアプリケーションです。
-https://dot-a-d5f6c.web.app/
 
-[Live Demo](https://dot-a-d5f6c.web.app/)
+[Demo]([https://dot-a-d5f6c.web.app/](https://dot-a-d5f6c.firebaseapp.com/))
 
 ## 目次
 - [現在の機能](#現在の機能)

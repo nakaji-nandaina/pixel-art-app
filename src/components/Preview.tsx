@@ -14,7 +14,6 @@ const Preview: React.FC<PreviewProps> = ({
   paletteColors,
   backgroundColorIndex,
 }) => {
-  const cellSize = 1; // 相対的なセルサイズ
   const gridSize = 40; // グリッドサイズ（40x40）
 
   // プレビューコンテナのスタイル

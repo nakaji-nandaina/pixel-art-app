@@ -59,7 +59,7 @@ const Palette: React.FC<PaletteProps> = React.memo(({
         return (
           <Tooltip
             key={index}
-            title={isBackground ? '背景色 (右クリックで変更)' : '色を選択'}
+            title='右クリックで背景色に設定'
             arrow
           >
             <Box

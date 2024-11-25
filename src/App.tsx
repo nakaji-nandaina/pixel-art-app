@@ -104,8 +104,8 @@ const App: React.FC = () => {
       setOpenSnackbar(true);
       return;
     }
-    if (value < 10 || value > 100) {
-      setErrorMessage('グリッドサイズは10から100の範囲で設定してください。');
+    if (value < 8 || value > 64) {
+      setErrorMessage('グリッドサイズは8から64の範囲で設定してください。');
       setOpenSnackbar(true);
       return;
     }

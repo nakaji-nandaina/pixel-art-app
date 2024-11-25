@@ -1,6 +1,6 @@
 // src/components/Palette.tsx
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, Tooltip } from '@mui/material';
 
 interface PaletteProps {
@@ -12,7 +12,7 @@ interface PaletteProps {
   setBackgroundColorIndex: (index: number) => void;
 }
 
-const Palette: React.FC<PaletteProps> = ({
+const Palette: React.FC<PaletteProps> = React.memo(({
   paletteColors,
   setPaletteColors,
   selectedPaletteIndex,
@@ -20,38 +20,55 @@ const Palette: React.FC<PaletteProps> = ({
   backgroundColorIndex,
   setBackgroundColorIndex,
 }) => {
+  const handleClick = useCallback((index: number) => {
+    setSelectedPaletteIndex(index);
+  }, [setSelectedPaletteIndex]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    setBackgroundColorIndex(index);
+  }, [setBackgroundColorIndex]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedPaletteIndex(index);
+    }
+    if (e.key === 'ContextMenu') { // 一部のキーボードでは右クリックをシミュレート
+      e.preventDefault();
+      setBackgroundColorIndex(index);
+    }
+  }, [setSelectedPaletteIndex, setBackgroundColorIndex]);
+
   return (
     <Box
       sx={{
         display: 'grid',
         gridTemplateColumns: 'repeat(16, 1fr)', // 256通常 + 1背景 = 17列
-        gridTemplateRows: 'repeat(Math.ceil(257 / 16), 1fr)', // 行数を計算
+        gridTemplateRows: 'repeat(auto-fill, 1fr)', // 行数を自動計算
         gap: '2px',
         mb: 2,
         width: '100%',
       }}
+      role="list"
+      aria-label="カラーパレット"
     >
       {paletteColors.map((color, index) => {
         const isBackground = index === backgroundColorIndex;
 
-        const handleClick = () => {
-          setSelectedPaletteIndex(index);
-        };
-
-        const handleContextMenu = (e: React.MouseEvent) => {
-          e.preventDefault();
-          setBackgroundColorIndex(index);
-        };
-
         return (
           <Tooltip
             key={index}
-            title={'背景色 (右クリックで変更)'}
+            title={isBackground ? '背景色 (右クリックで変更)' : '色を選択'}
             arrow
           >
             <Box
-              onClick={handleClick}
-              onContextMenu={handleContextMenu}
+              role="listitem"
+              tabIndex={0}
+              aria-label={`パレットカラー ${index + 1}`}
+              onClick={() => handleClick(index)}
+              onContextMenu={(e) => handleContextMenu(e, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               sx={{
                 width: '100%',
                 paddingTop: '100%', // 正方形のアスペクト比を維持
@@ -62,6 +79,9 @@ const Palette: React.FC<PaletteProps> = ({
                     : '1px solid #ccc',
                 backgroundColor: color,
                 cursor: 'pointer',
+                '&:focus': {
+                  outline: '2px solid #000',
+                },
               }}
             >
               {isBackground && (
@@ -86,6 +106,6 @@ const Palette: React.FC<PaletteProps> = ({
       })}
     </Box>
   );
-};
+});
 
 export default Palette;

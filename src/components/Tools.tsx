@@ -1,6 +1,6 @@
 // src/components/Tools.tsx
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, Button, Stack } from '@mui/material';
 
 type Tool = 'fill' | 'brush' | 'eyedropper' | 'select';
@@ -23,9 +23,10 @@ interface ToolsProps {
   isSelecting: boolean;
   moveOffset: { dx: number; dy: number };
   setMoveOffset: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>;
+  gridSize: number; // 動的グリッドサイズの追加
 }
 
-const Tools: React.FC<ToolsProps> = ({
+const Tools: React.FC<ToolsProps> = React.memo(({
   setTool,
   grid,
   setGrid,
@@ -36,46 +37,57 @@ const Tools: React.FC<ToolsProps> = ({
   isSelecting,
   moveOffset,
   setMoveOffset,
+  gridSize,
 }) => {
-  const handleSave = () => {
-    const canvasElement = document.createElement('canvas');
-    canvasElement.width = 40;
-    canvasElement.height = 40;
-    const ctx = canvasElement.getContext('2d');
+  const handleSave = useCallback(() => {
+    try {
+      const canvasElement = document.createElement('canvas');
+      canvasElement.width = gridSize;
+      canvasElement.height = gridSize;
+      const ctx = canvasElement.getContext('2d');
 
-    if (ctx) {
-      grid.forEach((row, y) => {
-        row.forEach((paletteIndex, x) => {
-          if (paletteIndex === backgroundColorIndex) {
-            ctx.clearRect(x, y, 1, 1);
-          } else {
-            ctx.fillStyle = paletteColors[paletteIndex];
-            ctx.fillRect(x, y, 1, 1);
-          }
+      if (ctx) {
+        grid.forEach((row, y) => {
+          row.forEach((paletteIndex, x) => {
+            if (paletteIndex === backgroundColorIndex) {
+              ctx.clearRect(x, y, 1, 1);
+            } else {
+              ctx.fillStyle = paletteColors[paletteIndex];
+              ctx.fillRect(x, y, 1, 1);
+            }
+          });
         });
-      });
 
-      const scaledCanvas = document.createElement('canvas');
-      scaledCanvas.width = 40 * 10;
-      scaledCanvas.height = 40 * 10;
-      const scaledCtx = scaledCanvas.getContext('2d');
-      if (scaledCtx) {
-        scaledCtx.imageSmoothingEnabled = false;
-        scaledCtx.drawImage(canvasElement, 0, 0, scaledCanvas.width, scaledCanvas.height);
+        const scaledCanvas = document.createElement('canvas');
+        scaledCanvas.width = gridSize * 10;
+        scaledCanvas.height = gridSize * 10;
+        const scaledCtx = scaledCanvas.getContext('2d');
+        if (scaledCtx) {
+          scaledCtx.imageSmoothingEnabled = false;
+          scaledCtx.drawImage(canvasElement, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
-        scaledCanvas.toBlob(blob => {
-          if (blob) {
-            const link = document.createElement('a');
-            link.download = 'pixel-art.png';
-            link.href = URL.createObjectURL(blob);
-            link.click();
-          }
-        }, 'image/png');
+          scaledCanvas.toBlob(blob => {
+            if (blob) {
+              const link = document.createElement('a');
+              link.download = 'pixel-art.png';
+              link.href = URL.createObjectURL(blob);
+              link.click();
+              URL.revokeObjectURL(link.href);
+            } else {
+              alert('画像の生成に失敗しました。');
+            }
+          }, 'image/png');
+        } else {
+          alert('画像のコンテキスト取得に失敗しました。');
+        }
       }
+    } catch (error) {
+      console.error('保存中にエラーが発生しました:', error);
+      alert('保存中にエラーが発生しました。');
     }
-  };
+  }, [grid, gridSize, paletteColors, backgroundColorIndex]);
 
-  const handleMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     let dx = 0;
     let dy = 0;
     if (direction === 'up') dy = -1;
@@ -87,36 +99,41 @@ const Tools: React.FC<ToolsProps> = ({
       dx: prev.dx + dx,
       dy: prev.dy + dy,
     }));
-  };
+  }, [setMoveOffset]);
 
-  const clearSelection = () => {
-    if (moveOffset.dx !== 0 || moveOffset.dy !== 0) {
-      const newGrid = grid.map(row => row.slice());
-      if (selection) {
-        for (let y = selection.y1; y <= selection.y2; y++) {
-          for (let x = selection.x1; x <= selection.x2; x++) {
-            const newX = x + moveOffset.dx;
-            const newY = y + moveOffset.dy;
-            // 背景パレットの色は変更しない
-            if (
-              newX >= 0 &&
-              newX < 40 &&
-              newY >= 0 &&
-              newY < 40 &&
-              newGrid[newY][newX] !== backgroundColorIndex
-            ) {
-              newGrid[newY][newX] = grid[y][x];
+  const clearSelection = useCallback(() => {
+    try {
+      if (moveOffset.dx !== 0 || moveOffset.dy !== 0) {
+        const newGrid = grid.map(row => row.slice());
+        if (selection) {
+          for (let y = selection.y1; y <= selection.y2; y++) {
+            for (let x = selection.x1; x <= selection.x2; x++) {
+              const newX = x + moveOffset.dx;
+              const newY = y + moveOffset.dy;
+              // 背景パレットの色は変更しない
+              if (
+                newX >= 0 &&
+                newX < gridSize &&
+                newY >= 0 &&
+                newY < gridSize &&
+                newGrid[newY][newX] !== backgroundColorIndex
+              ) {
+                newGrid[newY][newX] = grid[y][x];
+              }
             }
           }
+          setGrid(newGrid);
+          setMoveOffset({ dx: 0, dy: 0 });
         }
-        setGrid(newGrid);
-        setMoveOffset({ dx: 0, dy: 0 });
       }
+      setSelection(null);
+    } catch (error) {
+      console.error('選択解除中にエラーが発生しました:', error);
+      alert('選択解除中にエラーが発生しました。');
     }
-    setSelection(null);
-  };
+  }, [moveOffset, grid, gridSize, backgroundColorIndex, selection, setGrid, setMoveOffset, setSelection]);
 
-  const handleToolChange = (newTool: Tool) => {
+  const handleToolChange = useCallback((newTool: Tool) => {
     setTool(prevTool => {
       // 現在のツールが 'select' で、新しいツールも 'select' の場合
       if (prevTool === 'select' && newTool === 'select') {
@@ -135,7 +152,7 @@ const Tools: React.FC<ToolsProps> = ({
 
       return newTool;
     });
-  };
+  }, [setTool, setSelection, setMoveOffset]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
@@ -145,6 +162,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="contained"
           onClick={() => handleToolChange('brush')}
           color="primary"
+          aria-label="ブラシツールを選択"
         >
           ブラシ
         </Button>
@@ -152,6 +170,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="contained"
           onClick={() => handleToolChange('eyedropper')}
           color="primary"
+          aria-label="スポイトツールを選択"
         >
           スポイト
         </Button>
@@ -159,6 +178,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="contained"
           onClick={() => handleToolChange('fill')}
           color="primary"
+          aria-label="塗りつぶしツールを選択"
         >
           塗りつぶし
         </Button>
@@ -166,10 +186,17 @@ const Tools: React.FC<ToolsProps> = ({
           variant="contained"
           onClick={() => handleToolChange('select')}
           color={isSelecting ? 'secondary' : 'primary'}
+          aria-pressed={isSelecting}
+          aria-label="範囲選択ツールを選択"
         >
           範囲選択
         </Button>
-        <Button variant="contained" onClick={handleSave} color="primary">
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          color="primary"
+          aria-label="画像を保存"
+        >
           保存
         </Button>
       </Stack>
@@ -180,6 +207,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="outlined"
           onClick={() => handleMove('up')}
           disabled={isSelecting}
+          aria-label="選択範囲を上に移動"
         >
           ↑
         </Button>
@@ -187,6 +215,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="outlined"
           onClick={() => handleMove('left')}
           disabled={isSelecting}
+          aria-label="選択範囲を左に移動"
         >
           ←
         </Button>
@@ -194,6 +223,7 @@ const Tools: React.FC<ToolsProps> = ({
           variant="outlined"
           onClick={() => handleMove('down')}
           disabled={isSelecting}
+          aria-label="選択範囲を下に移動"
         >
           ↓
         </Button>
@@ -201,17 +231,23 @@ const Tools: React.FC<ToolsProps> = ({
           variant="outlined"
           onClick={() => handleMove('right')}
           disabled={isSelecting}
+          aria-label="選択範囲を右に移動"
         >
           →
         </Button>
       </Box>
 
       {/* 選択解除ボタン */}
-      <Button variant="outlined" onClick={clearSelection} sx={{ width: '100%', marginBottom: 2 }}>
+      <Button
+        variant="outlined"
+        onClick={clearSelection}
+        sx={{ width: '100%', marginBottom: 2 }}
+        aria-label="選択範囲を解除"
+      >
         選択解除
       </Button>
     </Box>
   );
-};
+});
 
 export default Tools;

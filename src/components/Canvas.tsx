@@ -1,6 +1,6 @@
 // src/components/Canvas.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 interface CanvasProps {
@@ -17,6 +17,7 @@ interface CanvasProps {
   setIsSelecting: (selecting: boolean) => void;
   moveOffset: { dx: number; dy: number };
   setMoveOffset: (offset: { dx: number; dy: number }) => void;
+  gridSize: number; // 動的グリッドサイズの追加
 }
 
 interface Selection {
@@ -26,7 +27,7 @@ interface Selection {
   y2: number;
 }
 
-const Canvas: React.FC<CanvasProps> = ({
+const Canvas: React.FC<CanvasProps> = React.memo(({
   grid,
   setGrid,
   paletteColors,
@@ -40,22 +41,23 @@ const Canvas: React.FC<CanvasProps> = ({
   setIsSelecting,
   moveOffset,
   setMoveOffset,
+  gridSize,
 }) => {
   const [isPainting, setIsPainting] = useState(false);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
 
-  const gridSize = 40; // グリッドサイズ（40x40）
-
-  const handleInteract = (x: number, y: number) => {
+  const handleInteract = useCallback((x: number, y: number) => {
     if (tool === 'eyedropper') {
       setSelectedColorIndex(grid[y][x]);
     } else if (tool === 'brush' || tool === 'fill') {
       if (tool === 'brush') {
         if (grid[y][x] !== selectedPaletteIndex) {
-          const newGrid = grid.map(row => row.slice());
-          newGrid[y][x] = selectedPaletteIndex;
-          setGrid(newGrid);
+          setGrid(prevGrid => {
+            const newGrid = prevGrid.map(row => row.slice());
+            newGrid[y][x] = selectedPaletteIndex;
+            return newGrid;
+          });
         }
       } else if (tool === 'fill') {
         const targetIndex = grid[y][x];
@@ -64,31 +66,33 @@ const Canvas: React.FC<CanvasProps> = ({
         }
       }
     }
-  };
+  }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid]);
 
-  const fillColor = (x: number, y: number, targetIndex: number) => {
-    const newGrid = grid.map(row => row.slice());
-    const stack: [number, number][] = [[x, y]];
-    while (stack.length > 0) {
-      const [cx, cy] = stack.pop()!;
-      if (
-        cx >= 0 &&
-        cx < gridSize &&
-        cy >= 0 &&
-        cy < gridSize &&
-        newGrid[cy][cx] === targetIndex
-      ) {
-        newGrid[cy][cx] = selectedPaletteIndex;
-        stack.push([cx + 1, cy]);
-        stack.push([cx - 1, cy]);
-        stack.push([cx, cy + 1]);
-        stack.push([cx, cy - 1]);
+  const fillColor = useCallback((x: number, y: number, targetIndex: number) => {
+    setGrid(prevGrid => {
+      const newGrid = prevGrid.map(row => row.slice());
+      const stack: [number, number][] = [[x, y]];
+      while (stack.length > 0) {
+        const [cx, cy] = stack.pop()!;
+        if (
+          cx >= 0 &&
+          cx < gridSize &&
+          cy >= 0 &&
+          cy < gridSize &&
+          newGrid[cy][cx] === targetIndex
+        ) {
+          newGrid[cy][cx] = selectedPaletteIndex;
+          stack.push([cx + 1, cy]);
+          stack.push([cx - 1, cy]);
+          stack.push([cx, cy + 1]);
+          stack.push([cx, cy - 1]);
+        }
       }
-    }
-    setGrid(newGrid);
-  };
+      return newGrid;
+    });
+  }, [gridSize, selectedPaletteIndex, setGrid]);
 
-  const handleMouseDown = (e: React.MouseEvent, x: number, y: number) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, x: number, y: number) => {
     e.preventDefault();
     if (tool === 'select') {
       setIsSelecting(true);
@@ -99,9 +103,9 @@ const Canvas: React.FC<CanvasProps> = ({
       setIsPainting(true);
       handleInteract(x, y);
     }
-  };
+  }, [tool, setIsSelecting, handleInteract, setMoveOffset]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     if (isSelecting && tool === 'select' && startPos && currentPos) {
       const x1 = Math.min(startPos.x, currentPos.x);
       const y1 = Math.min(startPos.y, currentPos.y);
@@ -115,17 +119,17 @@ const Canvas: React.FC<CanvasProps> = ({
     setIsSelecting(false);
     setStartPos(null);
     setCurrentPos(null);
-  };
+  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting]);
 
-  const handleMouseOver = (e: React.MouseEvent, x: number, y: number) => {
+  const handleMouseOver = useCallback((e: React.MouseEvent, x: number, y: number) => {
     if (tool === 'select' && isSelecting) {
       setCurrentPos({ x, y });
     } else if ((tool === 'brush' || tool === 'fill') && isPainting) {
       handleInteract(x, y);
     }
-  };
+  }, [tool, isSelecting, isPainting, handleInteract]);
 
-  const getSelectionStyle = () => {
+  const getSelectionStyle = useMemo(() => {
     if (!selection) return {};
     const { x1, y1, x2, y2 } = selection;
     const { dx, dy } = moveOffset;
@@ -146,9 +150,9 @@ const Canvas: React.FC<CanvasProps> = ({
       boxSizing: 'border-box' as const,
       zIndex: 1,
     };
-  };
+  }, [selection, moveOffset, gridSize]);
 
-  const getMovedSelectionPixels = () => {
+  const getMovedSelectionPixels = useMemo(() => {
     if (!selection || (moveOffset.dx === 0 && moveOffset.dy === 0)) return [];
     const { x1, y1, x2, y2 } = selection;
     const { dx, dy } = moveOffset;
@@ -167,7 +171,7 @@ const Canvas: React.FC<CanvasProps> = ({
       }
     }
     return movedPixels;
-  };
+  }, [selection, moveOffset, grid, paletteColors, gridSize]);
 
   return (
     <Box
@@ -176,12 +180,22 @@ const Canvas: React.FC<CanvasProps> = ({
         width: '100%',
         paddingTop: '100%', // 正方形のアスペクト比を維持
         border: '1px solid #000',
-        cursor: 'crosshair',
+        cursor: tool === 'select' ? 'move' : 'crosshair',
         userSelect: 'none',
         overflow: 'hidden',
       }}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      role="grid"
+      aria-label="ドット絵キャンバス"
+      tabIndex={0} // フォーカスを可能にする
+      onKeyDown={(e) => {
+        // キーボードショートカットの例（Ctrl+Sで保存など）
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          // 保存機能をトリガー（必要に応じて）
+        }
+      }}
     >
       <Box
         sx={{
@@ -197,27 +211,40 @@ const Canvas: React.FC<CanvasProps> = ({
       >
         {grid.map((row, y) =>
           row.map((paletteIndex, x) => {
-
+            const isBackground = paletteIndex === backgroundColorIndex;
             return (
               <Box
                 key={`${x}-${y}`}
+                role="gridcell"
+                aria-label={`Pixel ${x + 1}, ${y + 1}`}
+                tabIndex={0} // フォーカスを可能にする
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleInteract(x, y);
+                  }
+                }}
                 sx={{
                   border: '1px solid #ddd',
                   backgroundColor: paletteColors[paletteIndex],
+                  outline: 'none',
+                  '&:focus': {
+                    border: '2px solid #000',
+                  },
                 }}
-                onMouseDown={e => handleMouseDown(e, x, y)}
-                onMouseOver={e => handleMouseOver(e, x, y)}
+                onMouseDown={(e) => handleMouseDown(e, x, y)}
+                onMouseOver={(e) => handleMouseOver(e, x, y)}
               />
             );
           })
         )}
       </Box>
       {/* 選択範囲のオーバーレイ */}
-      {selection && <Box sx={getSelectionStyle()} />}
+      {selection && <Box sx={getSelectionStyle} />}
       {/* 移動中の選択範囲のオーバーレイ */}
       {selection &&
         (moveOffset.dx !== 0 || moveOffset.dy !== 0) &&
-        getMovedSelectionPixels().map(pixel => (
+        getMovedSelectionPixels.map(pixel => (
           <Box
             key={`moved-${pixel.x}-${pixel.y}`}
             sx={{
@@ -235,6 +262,6 @@ const Canvas: React.FC<CanvasProps> = ({
         ))}
     </Box>
   );
-};
+});
 
 export default Canvas;

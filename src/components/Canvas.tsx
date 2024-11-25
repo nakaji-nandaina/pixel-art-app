@@ -1,5 +1,4 @@
 // src/components/Canvas.tsx
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 
@@ -47,27 +46,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
 
-  const handleInteract = useCallback((x: number, y: number) => {
-    if (tool === 'eyedropper') {
-      setSelectedColorIndex(grid[y][x]);
-    } else if (tool === 'brush' || tool === 'fill') {
-      if (tool === 'brush') {
-        if (grid[y][x] !== selectedPaletteIndex) {
-          setGrid(prevGrid => {
-            const newGrid = prevGrid.map(row => row.slice());
-            newGrid[y][x] = selectedPaletteIndex;
-            return newGrid;
-          });
-        }
-      } else if (tool === 'fill') {
-        const targetIndex = grid[y][x];
-        if (targetIndex !== selectedPaletteIndex) {
-          fillColor(x, y, targetIndex);
-        }
-      }
-    }
-  }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid]);
-
+  // fillColor 関数を useCallback でメモ化
   const fillColor = useCallback((x: number, y: number, targetIndex: number) => {
     setGrid(prevGrid => {
       const newGrid = prevGrid.map(row => row.slice());
@@ -92,6 +71,29 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     });
   }, [gridSize, selectedPaletteIndex, setGrid]);
 
+  // handleInteract に fillColor を依存関係として追加
+  const handleInteract = useCallback((x: number, y: number) => {
+    if (tool === 'eyedropper') {
+      setSelectedColorIndex(grid[y][x]);
+    } else if (tool === 'brush' || tool === 'fill') {
+      if (tool === 'brush') {
+        if (grid[y][x] !== selectedPaletteIndex) {
+          setGrid(prevGrid => {
+            const newGrid = prevGrid.map(row => row.slice());
+            newGrid[y][x] = selectedPaletteIndex;
+            return newGrid;
+          });
+        }
+      } else if (tool === 'fill') {
+        const targetIndex = grid[y][x];
+        if (targetIndex !== selectedPaletteIndex) {
+          fillColor(x, y, targetIndex);
+        }
+      }
+    }
+  }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid, fillColor]);
+
+  // handleMouseDown に setIsSelecting を依存関係として追加
   const handleMouseDown = useCallback((e: React.MouseEvent, x: number, y: number) => {
     e.preventDefault();
     if (tool === 'select') {
@@ -119,7 +121,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     setIsSelecting(false);
     setStartPos(null);
     setCurrentPos(null);
-  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting]);
+  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting, setIsSelecting]);
 
   const handleMouseOver = useCallback((e: React.MouseEvent, x: number, y: number) => {
     if (tool === 'select' && isSelecting) {
@@ -211,7 +213,6 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
       >
         {grid.map((row, y) =>
           row.map((paletteIndex, x) => {
-            const isBackground = paletteIndex === backgroundColorIndex;
             return (
               <Box
                 key={`${x}-${y}`}

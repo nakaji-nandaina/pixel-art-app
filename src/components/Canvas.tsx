@@ -45,6 +45,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
   const [isPainting, setIsPainting] = useState(false);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
+  const [lastMousePos, setLastMousePos] = useState<{ x: number; y: number } | null>(null); // 追加
 
   // fillColor 関数を useCallback でメモ化
   const fillColor = useCallback((x: number, y: number, targetIndex: number) => {
@@ -73,25 +74,54 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
 
   // handleInteract に fillColor を依存関係として追加
   const handleInteract = useCallback((x: number, y: number) => {
+    if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return; // 範囲外チェックを追加
     if (tool === 'eyedropper') {
       setSelectedColorIndex(grid[y][x]);
-    } else if (tool === 'brush' || tool === 'fill') {
-      if (tool === 'brush') {
-        if (grid[y][x] !== selectedPaletteIndex) {
-          setGrid(prevGrid => {
-            const newGrid = prevGrid.map(row => row.slice());
-            newGrid[y][x] = selectedPaletteIndex;
-            return newGrid;
-          });
-        }
-      } else if (tool === 'fill') {
-        const targetIndex = grid[y][x];
-        if (targetIndex !== selectedPaletteIndex) {
-          fillColor(x, y, targetIndex);
-        }
+    }
+    else if (tool === 'brush') {
+      if (grid[y][x] !== selectedPaletteIndex) {
+        setGrid(prevGrid => {
+          const newGrid = [...prevGrid];
+          newGrid[y][x] = selectedPaletteIndex;
+          return newGrid;
+        });
       }
     }
-  }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid, fillColor]);
+    else if (tool === 'fill') {
+      const targetIndex = grid[y][x];
+      if (targetIndex !== selectedPaletteIndex) {
+        fillColor(x, y, targetIndex);
+      }
+    }
+  }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid, fillColor, gridSize]);
+
+  // 2点間のセルを取得する関数
+  const getLinePoints = useCallback((x0: number, y0: number, x1: number, y1: number) => {
+    const points: { x: number; y: number }[] = [];
+
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+      points.push({ x: x0, y: y0 });
+
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+
+    return points;
+  }, []);
 
   // handleMouseDown に setIsSelecting を依存関係として追加
   const handleMouseDown = useCallback((e: React.MouseEvent, x: number, y: number) => {
@@ -104,6 +134,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     } else {
       setIsPainting(true);
       handleInteract(x, y);
+      setLastMousePos({ x, y }); // 追加
     }
   }, [tool, setIsSelecting, handleInteract, setMoveOffset]);
 
@@ -117,19 +148,28 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     }
     if (isPainting) {
       setIsPainting(false);
+      setLastMousePos(null); // 追加
     }
     setIsSelecting(false);
     setStartPos(null);
     setCurrentPos(null);
-  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting, setIsSelecting]);
+  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting]);
 
   const handleMouseOver = useCallback((e: React.MouseEvent, x: number, y: number) => {
     if (tool === 'select' && isSelecting) {
       setCurrentPos({ x, y });
     } else if ((tool === 'brush' || tool === 'fill') && isPainting) {
-      handleInteract(x, y);
+      if (lastMousePos) {
+        const points = getLinePoints(lastMousePos.x, lastMousePos.y, x, y);
+        points.forEach(point => {
+          handleInteract(point.x, point.y);
+        });
+      } else {
+        handleInteract(x, y);
+      }
+      setLastMousePos({ x, y });
     }
-  }, [tool, isSelecting, isPainting, handleInteract]);
+  }, [tool, isSelecting, isPainting, handleInteract, lastMousePos, getLinePoints]);
 
   const getSelectionStyle = useMemo(() => {
     if (!selection) return {};
@@ -187,7 +227,10 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
         overflow: 'hidden',
       }}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={() => {
+        handleMouseUp();
+        setLastMousePos(null); // 追加
+      }}
       role="grid"
       aria-label="ドット絵キャンバス"
       tabIndex={0} // フォーカスを可能にする

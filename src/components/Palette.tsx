@@ -55,53 +55,46 @@ const Palette: React.FC<PaletteProps> = React.memo(({
     >
       {paletteColors.map((color, index) => {
         const isBackground = index === backgroundColorIndex;
-
         return (
-          <Tooltip
-            key={index}
-            title='右クリックで背景色に設定'
-            arrow
+          <Box
+            role="listitem"
+            tabIndex={0}
+            aria-label={`パレットカラー ${index + 1}`}
+            onClick={() => handleClick(index)}
+            onContextMenu={(e) => handleContextMenu(e, index)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            sx={{
+              width: '100%',
+              paddingTop: '100%', // 正方形のアスペクト比を維持
+              position: 'relative',
+              border:
+                selectedPaletteIndex === index
+                  ? '2px solid #000'
+                  : '1px solid #ccc',
+              backgroundColor: color,
+              cursor: 'pointer',
+              '&:focus': {
+                outline: '2px solid #000',
+              },
+            }}
           >
-            <Box
-              role="listitem"
-              tabIndex={0}
-              aria-label={`パレットカラー ${index + 1}`}
-              onClick={() => handleClick(index)}
-              onContextMenu={(e) => handleContextMenu(e, index)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              sx={{
-                width: '100%',
-                paddingTop: '100%', // 正方形のアスペクト比を維持
-                position: 'relative',
-                border:
-                  selectedPaletteIndex === index
-                    ? '2px solid #000'
-                    : '1px solid #ccc',
-                backgroundColor: color,
-                cursor: 'pointer',
-                '&:focus': {
-                  outline: '2px solid #000',
-                },
-              }}
-            >
-              {isBackground && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: '2px',
-                    right: '2px',
-                    fontSize: '8px',
-                    color: '#fff',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    padding: '1px 2px',
-                    borderRadius: '3px',
-                  }}
-                >
-                  BG
-                </Box>
-              )}
-            </Box>
-          </Tooltip>
+            {isBackground && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: '2px',
+                  right: '2px',
+                  fontSize: '8px',
+                  color: '#fff',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  padding: '1px 2px',
+                  borderRadius: '3px',
+                }}
+              >
+                BG
+              </Box>
+            )}
+          </Box>
         );
       })}
     </Box>

@@ -1,7 +1,12 @@
 // src/components/Tools.tsx
 
 import React, { useCallback } from 'react';
-import { Box, Button, Stack } from '@mui/material';
+import { Box, IconButton, Stack, Button, Tooltip } from '@mui/material';
+import BrushIcon from '@mui/icons-material/Brush';
+import ColorizeIcon from '@mui/icons-material/Colorize';
+import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
+import SaveIcon from '@mui/icons-material/Save';
 
 type Tool = 'fill' | 'brush' | 'eyedropper' | 'select';
 
@@ -14,6 +19,7 @@ interface Selection {
 
 interface ToolsProps {
   setTool: React.Dispatch<React.SetStateAction<Tool>>;
+  tool: Tool; // 現在選択されているツール
   grid: number[][];
   setGrid: React.Dispatch<React.SetStateAction<number[][]>>;
   paletteColors: string[];
@@ -28,6 +34,7 @@ interface ToolsProps {
 
 const Tools: React.FC<ToolsProps> = React.memo(({
   setTool,
+  tool, // 現在選択されているツール
   grid,
   setGrid,
   paletteColors,
@@ -110,16 +117,17 @@ const Tools: React.FC<ToolsProps> = React.memo(({
             for (let x = selection.x1; x <= selection.x2; x++) {
               const newX = x + moveOffset.dx;
               const newY = y + moveOffset.dy;
-              // 背景パレットの色は変更しない
+              // 移動先がグリッド内であれば上書き
               if (
                 newX >= 0 &&
                 newX < gridSize &&
                 newY >= 0 &&
-                newY < gridSize &&
-                newGrid[newY][newX] !== backgroundColorIndex
+                newY < gridSize
               ) {
                 newGrid[newY][newX] = grid[y][x];
               }
+              // 元の位置は変更しない（コピー）
+              // newGrid[y][x] = backgroundColorIndex; // これをコメントアウトまたは削除
             }
           }
           setGrid(newGrid);
@@ -138,75 +146,87 @@ const Tools: React.FC<ToolsProps> = React.memo(({
       // 現在のツールが 'select' で、新しいツールも 'select' の場合
       if (prevTool === 'select' && newTool === 'select') {
         // 範囲選択を解除
-        setSelection(null);
-        setMoveOffset({ dx: 0, dy: 0 });
+        clearSelection();
         return 'brush'; // デフォルトツールに戻す
       }
 
       // 現在のツールが 'select' で、新しいツールが別のツールの場合
       if (prevTool === 'select' && newTool !== 'select') {
         // 範囲選択を解除
-        setSelection(null);
-        setMoveOffset({ dx: 0, dy: 0 });
+        clearSelection();
       }
 
       return newTool;
     });
-  }, [setTool, setSelection, setMoveOffset]);
+  }, [setTool, clearSelection]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-      {/* ツールボタン */}
-      <Stack spacing={1} sx={{ width: '100%', marginBottom: 2 }}>
-        <Button
-          variant="contained"
-          onClick={() => handleToolChange('brush')}
-          color="primary"
-          aria-label="ブラシツールを選択"
-        >
-          ブラシ
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => handleToolChange('eyedropper')}
-          color="primary"
-          aria-label="スポイトツールを選択"
-        >
-          スポイト
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => handleToolChange('fill')}
-          color="primary"
-          aria-label="塗りつぶしツールを選択"
-        >
-          塗りつぶし
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => handleToolChange('select')}
-          color={isSelecting ? 'secondary' : 'primary'}
-          aria-pressed={isSelecting}
-          aria-label="範囲選択ツールを選択"
-        >
-          範囲選択
-        </Button>
+      {/* ツールボタンを横並びに配置 */}
+      <Stack direction="row" spacing={1} sx={{ width: '100%', marginBottom: 2 }}>
+        <Tooltip title="ブラシツール" arrow>
+          <IconButton
+            size="small"
+            onClick={() => handleToolChange('brush')}
+            color={tool === 'brush' ? 'secondary' : 'primary'} // 選択されている場合はsecondary色
+            aria-label="ブラシツールを選択"
+          >
+            <BrushIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="スポイトツール" arrow>
+          <IconButton
+            size="small"
+            onClick={() => handleToolChange('eyedropper')}
+            color={tool === 'eyedropper' ? 'secondary' : 'primary'} // 選択されている場合はsecondary色
+            aria-label="スポイトツールを選択"
+          >
+            <ColorizeIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="塗りつぶしツール" arrow>
+          <IconButton
+            size="small"
+            onClick={() => handleToolChange('fill')}
+            color={tool === 'fill' ? 'secondary' : 'primary'} // 選択されている場合はsecondary色
+            aria-label="塗りつぶしツールを選択"
+          >
+            <FormatColorFillIcon /> {/* バケツマークに変更 */}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="範囲選択ツール" arrow>
+          <IconButton
+            size="small"
+            onClick={() => handleToolChange('select')}
+            color={tool === 'select' ? 'secondary' : 'primary'} // 選択されている場合はsecondary色
+            aria-pressed={tool === 'select'}
+            aria-label="範囲選択ツールを選択"
+          >
+            <SelectAllIcon />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+
+      {/* 保存ボタン */}
+      <Box sx={{ width: '100%', marginBottom: 2 }}>
         <Button
           variant="contained"
           onClick={handleSave}
           color="primary"
+          startIcon={<SaveIcon />}
+          fullWidth
           aria-label="画像を保存"
         >
           保存
         </Button>
-      </Stack>
+      </Box>
 
       {/* 移動ボタン */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: 2 }}>
         <Button
           variant="outlined"
           onClick={() => handleMove('up')}
-          disabled={isSelecting}
+          disabled={!selection}
           aria-label="選択範囲を上に移動"
         >
           ↑
@@ -214,7 +234,7 @@ const Tools: React.FC<ToolsProps> = React.memo(({
         <Button
           variant="outlined"
           onClick={() => handleMove('left')}
-          disabled={isSelecting}
+          disabled={!selection}
           aria-label="選択範囲を左に移動"
         >
           ←
@@ -222,7 +242,7 @@ const Tools: React.FC<ToolsProps> = React.memo(({
         <Button
           variant="outlined"
           onClick={() => handleMove('down')}
-          disabled={isSelecting}
+          disabled={!selection}
           aria-label="選択範囲を下に移動"
         >
           ↓
@@ -230,22 +250,12 @@ const Tools: React.FC<ToolsProps> = React.memo(({
         <Button
           variant="outlined"
           onClick={() => handleMove('right')}
-          disabled={isSelecting}
+          disabled={!selection}
           aria-label="選択範囲を右に移動"
         >
           →
         </Button>
       </Box>
-
-      {/* 選択解除ボタン */}
-      <Button
-        variant="outlined"
-        onClick={clearSelection}
-        sx={{ width: '100%', marginBottom: 2 }}
-        aria-label="選択範囲を解除"
-      >
-        選択解除
-      </Button>
     </Box>
   );
 });

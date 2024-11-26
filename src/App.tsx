@@ -38,7 +38,7 @@ const App: React.FC = () => {
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(0);
 
   // 使用中のツール（'brush', 'eyedropper', 'fill', 'select'）
-  const [tool, setTool] = useState<Tool>('brush');
+  const [tool, setTool] = useState<Tool>('brush'); // 初期はブラシツール
 
   // 範囲選択の状態（{x1, y1, x2, y2}）
   const [selection, setSelection] = useState<{
@@ -47,6 +47,7 @@ const App: React.FC = () => {
     x2: number;
     y2: number;
   } | null>(null);
+  
   // 背景色として固定されたパレットのインデックス（例: 256）
   const [backgroundColorIndex, setBackgroundColorIndex] = useState<number>(256); // 256を背景カラーとして使用
 
@@ -162,7 +163,7 @@ const App: React.FC = () => {
             type="number"
             value={gridSizeInput}
             onChange={handleGridSizeInputChange}
-            inputProps={{ min: 10, max: 100 }}
+            inputProps={{ min: 8, max: 64 }}
             aria-label="グリッドサイズを入力"
             sx={{ mr: 2, width: '100px' }}
           />
@@ -203,7 +204,7 @@ const App: React.FC = () => {
                 setGrid={setGrid}
                 paletteColors={paletteColors}
                 selectedPaletteIndex={selectedPaletteIndex}
-                tool={tool}
+                tool={tool} // ツールを渡す
                 setSelectedColorIndex={setSelectedPaletteIndex}
                 selection={selection}
                 setSelection={setSelection}
@@ -222,6 +223,7 @@ const App: React.FC = () => {
             <Paper elevation={3} sx={{ p: 3, width: '100%' }}>
               <Tools
                 setTool={setTool}
+                tool={tool} // 現在のツールを渡す
                 grid={grid}
                 setGrid={setGrid}
                 paletteColors={paletteColors}

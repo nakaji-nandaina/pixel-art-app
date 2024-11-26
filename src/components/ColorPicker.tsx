@@ -7,8 +7,6 @@ import {
   Typography,
   Grid,
   TextField,
-  InputAdornment,
-  Button,
   IconButton
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';

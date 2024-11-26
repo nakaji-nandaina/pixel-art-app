@@ -153,7 +153,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     setIsSelecting(false);
     setStartPos(null);
     setCurrentPos(null);
-  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting]);
+  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting,setIsSelecting]);
 
   const handleMouseOver = useCallback((e: React.MouseEvent, x: number, y: number) => {
     if (tool === 'select' && isSelecting) {

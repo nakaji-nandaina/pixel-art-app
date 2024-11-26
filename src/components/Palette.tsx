@@ -1,7 +1,7 @@
 // src/components/Palette.tsx
 
 import React, { useCallback } from 'react';
-import { Box, Tooltip } from '@mui/material';
+import { Box} from '@mui/material';
 
 interface PaletteProps {
   paletteColors: string[];

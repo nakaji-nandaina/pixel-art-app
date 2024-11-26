@@ -26,12 +26,12 @@ const App: React.FC = () => {
   
   // グリッドのピクセルデータを背景色インデックスで初期化
   const [grid, setGrid] = useState<number[][]>(
-    Array.from({ length: 40 }, () => Array(40).fill(256)) // 初期値は背景色インデックス256
+    Array.from({ length: 40 }, () => Array(40).fill(31)) // 初期値は背景色インデックス256
   );
 
   // パレットの色を管理する状態（256通常色 + 1背景色）
   const [paletteColors, setPaletteColors] = useState<string[]>(
-    Array(257).fill('rgba(255,255,255,1)') // 初期色を白に設定
+    Array(31).fill('rgba(255,255,255,1)') // 初期色を白に設定
   );
 
   // 選択中のパレットのインデックス（初期は0）
@@ -48,13 +48,10 @@ const App: React.FC = () => {
     y2: number;
   } | null>(null);
   
-  // 背景色として固定されたパレットのインデックス（例: 256）
-  const [backgroundColorIndex, setBackgroundColorIndex] = useState<number>(256); // 256を背景カラーとして使用
+  const [backgroundColorIndex, setBackgroundColorIndex] = useState<number>(30); // 256を背景カラーとして使用
 
-  // 範囲選択中かどうかを管理する状態
   const [isSelecting, setIsSelecting] = useState(false);
 
-  // 選択範囲の移動オフセット（dx, dy）
   const [moveOffset, setMoveOffset] = useState<{ dx: number; dy: number }>({
     dx: 0,
     dy: 0,
@@ -151,31 +148,10 @@ const App: React.FC = () => {
       >
         {/* タイトル */}
         <Typography variant="h4" align="center" gutterBottom>
-          ドット絵作成ツール
+          ピクセルくりえいたー
         </Typography>
 
-        {/* グリッドサイズの入力 */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ mr: 2 }}>
-            グリッドサイズ:
-          </Typography>
-          <TextField
-            type="number"
-            value={gridSizeInput}
-            onChange={handleGridSizeInputChange}
-            inputProps={{ min: 8, max: 64 }}
-            aria-label="グリッドサイズを入力"
-            sx={{ mr: 2, width: '100px' }}
-          />
-          <Button
-            variant="contained"
-            onClick={handleGridSizeConfirm}
-            aria-label="グリッドサイズを決定"
-          >
-            決定
-          </Button>
-        </Box>
-
+        
         {/* メインコンテンツ */}
         <Grid
           container
@@ -194,7 +170,30 @@ const App: React.FC = () => {
                 gridSize={gridSize}
               />
             </Box>
+            {/* グリッドサイズの入力 */}
+            <Box sx={{ mt:4,mb: 4, display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body2" sx={{ mr: 2 }}>
+                サイズ:
+              </Typography>
+              <TextField
+                type="number"
+                value={gridSizeInput}
+                onChange={handleGridSizeInputChange}
+                inputProps={{ min: 8, max: 64 }}
+                aria-label="グリッドサイズを入力"
+                sx={{ mr: 2, width: '80px' }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleGridSizeConfirm}
+                aria-label="グリッドサイズを決定"
+              >
+                決定
+              </Button>
+            </Box>
+
           </Grid>
+          
 
           {/* キャンバス */}
           <Grid item sx={{ flexShrink: 0, width: '800px' }}>

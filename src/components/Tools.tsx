@@ -139,7 +139,7 @@ const Tools: React.FC<ToolsProps> = React.memo(({
       console.error('選択解除中にエラーが発生しました:', error);
       alert('選択解除中にエラーが発生しました。');
     }
-  }, [moveOffset, grid, gridSize, backgroundColorIndex, selection, setGrid, setMoveOffset, setSelection]);
+  }, [moveOffset, grid, gridSize,  selection, setGrid, setMoveOffset, setSelection]);
 
   const handleToolChange = useCallback((newTool: Tool) => {
     setTool(prevTool => {

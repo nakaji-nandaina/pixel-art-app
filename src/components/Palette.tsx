@@ -44,7 +44,7 @@ const Palette: React.FC<PaletteProps> = React.memo(({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(16, 1fr)', // 256通常 + 1背景 = 17列
+        gridTemplateColumns: 'repeat(10, 1fr)', // 256通常 + 1背景 = 17列
         gridTemplateRows: 'repeat(auto-fill, 1fr)', // 行数を自動計算
         gap: '2px',
         mb: 2,

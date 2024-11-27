@@ -1,7 +1,7 @@
 // src/components/Palette.tsx
 
 import React, { useCallback } from 'react';
-import { Box} from '@mui/material';
+import { Box } from '@mui/material';
 
 interface PaletteProps {
   paletteColors: string[];
@@ -10,6 +10,7 @@ interface PaletteProps {
   setSelectedPaletteIndex: (index: number) => void;
   backgroundColorIndex: number;
   setBackgroundColorIndex: (index: number) => void;
+  isBackgroundImageOn: boolean;
 }
 
 const Palette: React.FC<PaletteProps> = React.memo(({
@@ -19,6 +20,7 @@ const Palette: React.FC<PaletteProps> = React.memo(({
   setSelectedPaletteIndex,
   backgroundColorIndex,
   setBackgroundColorIndex,
+  isBackgroundImageOn,
 }) => {
   const handleClick = useCallback((index: number) => {
     setSelectedPaletteIndex(index);
@@ -44,9 +46,9 @@ const Palette: React.FC<PaletteProps> = React.memo(({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(10, 1fr)', // 256通常 + 1背景 = 17列
+        gridTemplateColumns: 'repeat(10, 1fr)', // 10列に設定
         gridTemplateRows: 'repeat(auto-fill, 1fr)', // 行数を自動計算
-        gap: '2px',
+        gap: '4px',
         mb: 2,
         width: '100%',
       }}
@@ -55,8 +57,10 @@ const Palette: React.FC<PaletteProps> = React.memo(({
     >
       {paletteColors.map((color, index) => {
         const isBackground = index === backgroundColorIndex;
+        if (isBackground&& !isBackgroundImageOn) color = 'rgba(255, 255, 255, 0)';
         return (
           <Box
+            key={index}
             role="listitem"
             tabIndex={0}
             aria-label={`パレットカラー ${index + 1}`}
@@ -69,13 +73,16 @@ const Palette: React.FC<PaletteProps> = React.memo(({
               position: 'relative',
               border:
                 selectedPaletteIndex === index
-                  ? '2px solid #000'
+                  ? '1px solid #000'
                   : '1px solid #ccc',
               backgroundColor: color,
               cursor: 'pointer',
+              borderRadius: '50%', // 追加: 円形にする
               '&:focus': {
                 outline: '2px solid #000',
               },
+              // 背景パレットは常に透明に設定
+              ...(isBackground && { backgroundColor: 'rgba(0, 0, 0, 0)' }),
             }}
           >
             {isBackground && (

@@ -1,6 +1,14 @@
 // src/components/Canvas.tsx
-import React, { useState, useCallback, useMemo } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
+
+interface Selection {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
 
 interface CanvasProps {
   grid: number[][];
@@ -16,14 +24,10 @@ interface CanvasProps {
   setIsSelecting: (selecting: boolean) => void;
   moveOffset: { dx: number; dy: number };
   setMoveOffset: (offset: { dx: number; dy: number }) => void;
-  gridSize: number; // 動的グリッドサイズの追加
-}
-
-interface Selection {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  gridSize: number;
+  backgroundImage: string | null; // 追加
+  backgroundOpacity: number; // 追加
+  isBackgroundImageOn: boolean; // 追加
 }
 
 const Canvas: React.FC<CanvasProps> = React.memo(({
@@ -41,13 +45,16 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
   moveOffset,
   setMoveOffset,
   gridSize,
+  backgroundImage, // 追加
+  backgroundOpacity, // 追加
+  isBackgroundImageOn, // 追加
 }) => {
   const [isPainting, setIsPainting] = useState(false);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [currentPos, setCurrentPos] = useState<{ x: number; y: number } | null>(null);
   const [lastMousePos, setLastMousePos] = useState<{ x: number; y: number } | null>(null); // 追加
 
-  // fillColor 関数を useCallback でメモ化
+  // 塗りつぶし関数
   const fillColor = useCallback((x: number, y: number, targetIndex: number) => {
     setGrid(prevGrid => {
       const newGrid = prevGrid.map(row => row.slice());
@@ -72,7 +79,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     });
   }, [gridSize, selectedPaletteIndex, setGrid]);
 
-  // handleInteract に fillColor を依存関係として追加
+  // ツールに応じたインタラクションハンドラ
   const handleInteract = useCallback((x: number, y: number) => {
     if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return; // 範囲外チェックを追加
     if (tool === 'eyedropper') {
@@ -95,7 +102,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     }
   }, [tool, grid, selectedPaletteIndex, setSelectedColorIndex, setGrid, fillColor, gridSize]);
 
-  // 2点間のセルを取得する関数
+  // Bresenhamのアルゴリズムを用いた2点間のセル取得関数
   const getLinePoints = useCallback((x0: number, y0: number, x1: number, y1: number) => {
     const points: { x: number; y: number }[] = [];
 
@@ -123,7 +130,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     return points;
   }, []);
 
-  // handleMouseDown に setIsSelecting を依存関係として追加
+  // マウスダウンハンドラ
   const handleMouseDown = useCallback((e: React.MouseEvent, x: number, y: number) => {
     e.preventDefault();
     if (tool === 'select') {
@@ -138,6 +145,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     }
   }, [tool, setIsSelecting, handleInteract, setMoveOffset]);
 
+  // マウスアップハンドラ
   const handleMouseUp = useCallback(() => {
     if (isSelecting && tool === 'select' && startPos && currentPos) {
       const x1 = Math.min(startPos.x, currentPos.x);
@@ -153,8 +161,9 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     setIsSelecting(false);
     setStartPos(null);
     setCurrentPos(null);
-  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting,setIsSelecting]);
+  }, [isSelecting, tool, startPos, currentPos, setSelection, isPainting, setIsSelecting]);
 
+  // マウスオーバーハンドラ
   const handleMouseOver = useCallback((e: React.MouseEvent, x: number, y: number) => {
     if (tool === 'select' && isSelecting) {
       setCurrentPos({ x, y });
@@ -171,49 +180,6 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
     }
   }, [tool, isSelecting, isPainting, handleInteract, lastMousePos, getLinePoints]);
 
-  const getSelectionStyle = useMemo(() => {
-    if (!selection) return {};
-    const { x1, y1, x2, y2 } = selection;
-    const { dx, dy } = moveOffset;
-
-    const left = ((x1 + dx) / gridSize) * 100;
-    const top = ((y1 + dy) / gridSize) * 100;
-    const width = ((x2 - x1 + 1) / gridSize) * 100;
-    const height = ((y2 - y1 + 1) / gridSize) * 100;
-
-    return {
-      position: 'absolute' as const,
-      border: '2px dashed #000',
-      left: `${left}%`,
-      top: `${top}%`,
-      width: `${width}%`,
-      height: `${height}%`,
-      pointerEvents: 'none',
-      boxSizing: 'border-box' as const,
-      zIndex: 1,
-    };
-  }, [selection, moveOffset, gridSize]);
-
-  const getMovedSelectionPixels = useMemo(() => {
-    if (!selection || (moveOffset.dx === 0 && moveOffset.dy === 0)) return [];
-    const { x1, y1, x2, y2 } = selection;
-    const { dx, dy } = moveOffset;
-    const movedPixels: { x: number; y: number; color: string }[] = [];
-    for (let y = y1; y <= y2; y++) {
-      for (let x = x1; x <= x2; x++) {
-        const newX = x + dx;
-        const newY = y + dy;
-        if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
-          movedPixels.push({
-            x: newX,
-            y: newY,
-            color: paletteColors[grid[y][x]],
-          });
-        }
-      }
-    }
-    return movedPixels;
-  }, [selection, moveOffset, grid, paletteColors, gridSize]);
 
   return (
     <Box
@@ -238,10 +204,43 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
         // キーボードショートカットの例（Ctrl+Sで保存など）
         if (e.ctrlKey && e.key === 's') {
           e.preventDefault();
-          // 保存機能をトリガー（必要に応じて）
         }
       }}
     >
+      {/* 背景色レイヤー */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: isBackgroundImageOn ? 'rgba(0,0,0,0)' : paletteColors[backgroundColorIndex],
+          pointerEvents: 'none',
+          zIndex: 1, // 最下層
+        }}
+      />
+
+      {/* 背景画像レイヤー */}
+      {isBackgroundImageOn && backgroundImage && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: backgroundOpacity,
+            pointerEvents: 'none',
+            zIndex: 2, // 背景色レイヤーの上
+          }}
+        />
+      )}
+
+      {/* グリッドピクセルレイヤー */}
       <Box
         sx={{
           position: 'absolute',
@@ -252,10 +251,12 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
           display: 'grid',
           gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
           gridTemplateRows: `repeat(${gridSize}, 1fr)`,
+          zIndex: 3, // 背景画像レイヤーの上
         }}
       >
         {grid.map((row, y) =>
           row.map((paletteIndex, x) => {
+            const color = paletteIndex=== backgroundColorIndex && isBackgroundImageOn ? 'rgba(0,0,0,0)' : paletteColors[paletteIndex];
             return (
               <Box
                 key={`${x}-${y}`}
@@ -269,8 +270,7 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
                   }
                 }}
                 sx={{
-                  border: '1px solid #ddd',
-                  backgroundColor: paletteColors[paletteIndex],
+                  backgroundColor: color,
                   outline: 'none',
                   '&:focus': {
                     border: '2px solid #000',
@@ -283,27 +283,75 @@ const Canvas: React.FC<CanvasProps> = React.memo(({
           })
         )}
       </Box>
+
+      {/* グリッドラインオーバーレイヤー */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: `
+            linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: `${100 / gridSize}% ${100 / gridSize}%`,
+          pointerEvents: 'none', // オーバーレイヤーはマウスイベントを受け取らない
+          zIndex: 4, // グリッドピクセルレイヤーの上
+        }}
+      />
+
       {/* 選択範囲のオーバーレイ */}
-      {selection && <Box sx={getSelectionStyle} />}
-      {/* 移動中の選択範囲のオーバーレイ */}
+      {selection && <Box sx={{
+        position: 'absolute',
+        border: '2px dashed #000',
+        left: `${(selection.x1 / gridSize) * 100}%`,
+        top: `${(selection.y1 / gridSize) * 100}%`,
+        width: `${((selection.x2 - selection.x1 + 1) / gridSize) * 100}%`,
+        height: `${((selection.y2 - selection.y1 + 1) / gridSize) * 100}%`,
+        pointerEvents: 'none',
+        boxSizing: 'border-box',
+        zIndex: 5,
+      }} />}
+
+      {/* 移動中の選択範囲のピクセル */}
       {selection &&
         (moveOffset.dx !== 0 || moveOffset.dy !== 0) &&
-        getMovedSelectionPixels.map(pixel => (
-          <Box
-            key={`moved-${pixel.x}-${pixel.y}`}
-            sx={{
-              position: 'absolute',
-              left: `${(pixel.x / gridSize) * 100}%`,
-              top: `${(pixel.y / gridSize) * 100}%`,
-              width: `${(1 / gridSize) * 100}%`,
-              height: `${(1 / gridSize) * 100}%`,
-              backgroundColor: pixel.color,
-              pointerEvents: 'none',
-              opacity: 1,
-              border: '1px solid #ddd',
-            }}
-          />
-        ))}
+        grid.map((row, y) =>
+          row.map((paletteIndex, x) => {
+            if (
+              x >= selection.x1 &&
+              x <= selection.x2 &&
+              y >= selection.y1 &&
+              y <= selection.y2
+            ) {
+              const newX = x + moveOffset.dx;
+              const newY = y + moveOffset.dy;
+              if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
+                const color = paletteColors[paletteIndex];
+                return (
+                  <Box
+                    key={`moved-${newX}-${newY}`}
+                    sx={{
+                      position: 'absolute',
+                      left: `${(newX / gridSize) * 100}%`,
+                      top: `${(newY / gridSize) * 100}%`,
+                      width: `${(1 / gridSize) * 100}%`,
+                      height: `${(1 / gridSize) * 100}%`,
+                      backgroundColor: color,
+                      pointerEvents: 'none',
+                      opacity: 1,
+                      border: '1px solid #ddd',
+                      zIndex: 6,
+                    }}
+                  />
+                );
+              }
+            }
+            return null;
+          })
+        )}
     </Box>
   );
 });

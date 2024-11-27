@@ -26,12 +26,12 @@ const App: React.FC = () => {
   
   // グリッドのピクセルデータを背景色インデックスで初期化
   const [grid, setGrid] = useState<number[][]>(
-    Array.from({ length: 40 }, () => Array(40).fill(31)) // 初期値は背景色インデックス256
+    Array.from({ length: 40 }, () => Array(40).fill(41)) // 初期値は背景色インデックス256
   );
 
   // パレットの色を管理する状態（256通常色 + 1背景色）
   const [paletteColors, setPaletteColors] = useState<string[]>(
-    Array(31).fill('rgba(255,255,255,1)') // 初期色を白に設定
+    Array(41).fill('rgba(255,255,255,1)') // 初期色を白に設定
   );
 
   // 選択中のパレットのインデックス（初期は0）
@@ -48,7 +48,8 @@ const App: React.FC = () => {
     y2: number;
   } | null>(null);
   
-  const [backgroundColorIndex, setBackgroundColorIndex] = useState<number>(30); // 256を背景カラーとして使用
+  //初期の背景色インデックス
+  const [backgroundColorIndex, setBackgroundColorIndex] = useState<number>(40); // 40番を背景カラーとして使用
 
   const [isSelecting, setIsSelecting] = useState(false);
 

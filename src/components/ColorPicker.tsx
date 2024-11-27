@@ -1,6 +1,6 @@
 // src/components/ColorPicker.tsx
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState,useEffect } from 'react';
 import {
   Box,
   Slider,
@@ -120,6 +120,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   const [hexInput, setHexInput] = useState<string>(rgbToHex(color.r, color.g, color.b));
   const [hexError, setHexError] = useState<boolean>(false);
 
+  // HEXコードを`selectedColor`と同期
+  useEffect(() => {
+    const { r, g, b } = parseRGBA(selectedColor);
+    setHexInput(rgbToHex(r, g, b));
+  }, [selectedColor, parseRGBA, rgbToHex]);
+
   // 16進数カラーコードの変更を処理（ローカルステートのみ更新）
   const handleHexInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,9 +202,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h6" gutterBottom>
-        カラーピッカー
-      </Typography>
       <Grid container spacing={2} alignItems="center">
         {/* Red Slider */}
         <Grid item xs={2}>
@@ -222,13 +225,14 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 '& .MuiSlider-thumb': {
                   width: 24, // サムの幅を調整（デフォルトは12）
                   height: 24, // サムの高さを調整（デフォルトは12）
-                  backgroundColor: '#FF0000', // チャンネルに対応する色
+                  backgroundColor: `rgba(${color.r}, ${color.g}, ${color.b}, 1)`, // チャンネルに対応する色
                   '&:hover, &.Mui-focusVisible, &.Mui-active': {
                     boxShadow: '0px 0px 0px 8px rgba(255, 0, 0, 0.16)',
                   },
                 },
                 '& .MuiSlider-rail': {
                   height: 8, // レールの高さを調整（デフォルトは4）
+                  background: generateGradient('r') + ' !important', 
                 },
                 '& .MuiSlider-track': {
                   height: 8, // トラックの高さを調整（デフォルトは4）
@@ -252,7 +256,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 left: 0,
                 height: '100%',
                 width: `${(color.r / 255) * 100}%`,
-                backgroundColor: 'transparent',
+                //backgroundColor: 'transparent',
                 pointerEvents: 'none',
                 zIndex: 0,
               }}
@@ -294,12 +298,13 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 '& .MuiSlider-thumb': {
                   width: 24, // サムの幅を調整
                   height: 24, // サムの高さを調整
-                  backgroundColor: '#00FF00', // チャンネルに対応する色
+                  backgroundColor: `rgba(${color.r}, ${color.g}, ${color.b}, 1)`,
                   '&:hover, &.Mui-focusVisible, &.Mui-active': {
                     boxShadow: '0px 0px 0px 8px rgba(0, 255, 0, 0.16)',
                   },
                 },
                 '& .MuiSlider-rail': {
+                  background: generateGradient('g') + ' !important', 
                   height: 8, // レールの高さを調整
                 },
                 '& .MuiSlider-track': {
@@ -324,7 +329,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 left: 0,
                 height: '100%',
                 width: `${(color.g / 255) * 100}%`,
-                backgroundColor: 'transparent',
+                //backgroundColor: 'transparent',
                 pointerEvents: 'none',
                 zIndex: 0,
               }}
@@ -366,12 +371,13 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 '& .MuiSlider-thumb': {
                   width: 24, // サムの幅を調整
                   height: 24, // サムの高さを調整
-                  backgroundColor: '#0000FF', // チャンネルに対応する色
+                  backgroundColor: `rgba(${color.r}, ${color.g}, ${color.b}, 1)`, 
                   '&:hover, &.Mui-focusVisible, &.Mui-active': {
                     boxShadow: '0px 0px 0px 8px rgba(0, 0, 255, 0.16)',
                   },
                 },
                 '& .MuiSlider-rail': {
+                  background: generateGradient('b') + ' !important',
                   height: 8, // レールの高さを調整
                 },
                 '& .MuiSlider-track': {
@@ -396,7 +402,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 left: 0,
                 height: '100%',
                 width: `${(color.b / 255) * 100}%`,
-                backgroundColor: 'transparent',
+                //backgroundColor: 'transparent',
                 pointerEvents: 'none',
                 zIndex: 0,
               }}
